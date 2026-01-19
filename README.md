@@ -25,12 +25,12 @@ You can now run the tool directly as ./cryptic.js or cryptic if added to PATH.
 ## Usage
 Encrypt a File
 ```bash
-./cryptic.js -e <file> <password>
+./cryptic.js -e <file> 
 ```
 
 Decrypt a File
 ```bash
-./cryptic.js -d <file> <password>
+./cryptic.js -d <file> 
 ```
 
 Help
