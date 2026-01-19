@@ -8,13 +8,13 @@ git clone git@github.com:Jee-vim/cryptic
 cd cryptic
 ```
 
-** Make the script executable:
+Make the script executable:
 ```bash
 chmod +x cryptic.js
 ```
  
 
-**(Optional) Add to your system PATH to run it globally:
+(Optional) Add to your system PATH to run it globally:
 ```bash
 sudo ln -s $(pwd)/cryptic.js /usr/local/bin/cryptic
 ```
@@ -23,17 +23,17 @@ sudo ln -s $(pwd)/cryptic.js /usr/local/bin/cryptic
 You can now run the tool directly as ./cryptic.js or cryptic if added to PATH.
 
 ## Usage
-** Encrypt a File
+Encrypt a File
 ```bash
 ./cryptic.js -e <file> <password>
 ```
 
-** Decrypt a File
+Decrypt a File
 ```bash
 ./cryptic.js -d <file> <password>
 ```
 
-** Help
+Help
 ```bash
 ./cryptic.js -h
 ```
