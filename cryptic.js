@@ -35,12 +35,13 @@ function decrypt(data, password) {
 
 const args = process.argv.slice(2);
 
-if (args.length < 3 || !['-e','-d'].includes(args[0])) {
+if (args.length < 2 || !['-e', '-d'].includes(args[0])) {
   console.log(`
-Usage: node cryptic.js -e|-d <file> <password>
+Usage: node cryptic.js -e|-d <file>
   -e  Encrypt mode
   -d  Decrypt mode
-File argument is mandatory. Password argument is mandatory.
+File argument is mandatory.
+Password will be prompted securely.
 Output file will be auto-generated as encrypt_<file> or decrypt_<file>
 `);
   process.exit(0);
@@ -48,20 +49,75 @@ Output file will be auto-generated as encrypt_<file> or decrypt_<file>
 
 const mode = args[0] === '-e' ? 'encrypt' : 'decrypt';
 const inputFile = args[1];
-const password = args[2];
-
-// Auto-generate output file name
 const inputBase = path.basename(inputFile);
-const outputFile = path.join(
-  path.dirname(inputFile),
-  `${mode}_${inputBase}`
-);
 
-try {
-  const inputData = fs.readFileSync(inputFile, 'utf8');
-  const outputData = mode === 'encrypt' ? encrypt(inputData, password) : decrypt(inputData, password);
-  fs.writeFileSync(outputFile, outputData, 'utf8');
-  console.log(`Success: ${mode}ed file saved to ${outputFile}`);
-} catch (err) {
-  console.error('Error:', err.message);
+let outputFile;
+
+if (mode === 'encrypt') {
+  outputFile = path.join(path.dirname(inputFile), `encrypt_${inputBase}`);
+} else {
+  if (inputBase.startsWith('encrypt_')) {
+    outputFile = path.join(path.dirname(inputFile), inputBase.slice(8));
+  } else {
+    outputFile = path.join(path.dirname(inputFile), `decrypt_${inputBase}`);
+  }
 }
+
+function promptPassword(prompt = 'Password: ') {
+  return new Promise(resolve => {
+    process.stdout.write(prompt);
+
+    const stdin = process.stdin;
+    stdin.setRawMode(true);
+    stdin.resume();
+    stdin.setEncoding('utf8');
+
+    let password = '';
+
+    function onData(char) {
+      char = String(char);
+
+      // Enter
+      if (char === '\r' || char === '\n') {
+        stdin.setRawMode(false);
+        stdin.pause();
+        stdin.removeListener('data', onData);
+        process.stdout.write('\n');
+        resolve(password);
+        return;
+      }
+
+      // Ctrl+C
+      if (char === '\u0003') {
+        process.exit(130);
+      }
+
+      // Backspace
+      if (char === '\u007f') {
+        password = password.slice(0, -1);
+        return;
+      }
+
+      password += char;
+    }
+
+    stdin.on('data', onData);
+  });
+}
+
+(async () => {
+  try {
+    const password = await promptPassword();
+
+    const inputData = fs.readFileSync(inputFile, 'utf8');
+    const outputData =
+      mode === 'encrypt'
+        ? encrypt(inputData, password)
+        : decrypt(inputData, password);
+
+    fs.writeFileSync(outputFile, outputData, 'utf8');
+    console.log(`Success: ${mode}ed file saved to ${outputFile}`);
+  } catch (err) {
+    console.error('Error:', err.message);
+  }
+})();
